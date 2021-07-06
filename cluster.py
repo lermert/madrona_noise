@@ -151,9 +151,10 @@ def run_clustering(config, rank, size):
                         gmmodels, n_clusters, gmixfinPCA, probs, BICF = gmm(all_pccs, range_ncomps)
 
                         # save the cluster labels
-                        labels = np.zeros((2, len(all_timestamps)))
+                        labels = np.zeros((3, len(all_timestamps)))
                         labels[0] = all_timestamps
                         labels[1] = gmixfinPCA
+                        labels[2] = np.max(probs, axis=1)
                         outputfile = "{}.{}-{}.{}_{}-{}Hz.gmmlabels.npy".format(station1, ch1, station2, ch2, fmin, fmax)
                         np.save(os.path.join(config["cluster_dir"], outputfile), labels)
     return()

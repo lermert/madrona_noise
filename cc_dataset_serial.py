@@ -421,7 +421,7 @@ class CCDataset_serial(object):
         # commit to a new dataset object or add it to existing
         fs = dict(self.datafile['stats'].attrs)['sampling_rate']
         npts = self.datafile['corr_windows']["data"][0].shape[0]
-        ntraces = len(np.where(self.datafile["corr_windows"]["timestamps"][:] != "")[0])
+        ntraces = len(self.datafile["corr_windows"]["timestamps"])
 
         if ix_corr_max is None:
             ix_corr_max = ntraces
@@ -434,7 +434,7 @@ class CCDataset_serial(object):
         try:
             data = np.zeros((ix_corr_max - ix_corr_min, npts))
         except MemoryError:
-            print("Data doesn't fit in memory, set a lower n_corr_max")
+            print("Data doesn't fit in memory, set a lower ix_corr_max")
             return()
         
         # allocate timestamps array
@@ -444,14 +444,20 @@ class CCDataset_serial(object):
             tstamp = self.datafile["corr_windows"]["timestamps"][i]
             data[i - ix_corr_min, :] = v
 
-            if tstamp == "":
-                continue
-            try:
-                tstmp = '{},{},{},{},{}'.format(*tstamp.split('.')[0: 5])
 
-            except TypeError:
-                tstmp = '{},{},{},{},{}'.format(*tstamp.decode("utf-8").split('.')[0: 5])
-            timestamps[i - ix_corr_min] = UTCDateTime(tstmp).timestamp
+            if type(tstamp) == str:
+                if tstamp == "":
+                    continue
+                try:
+                    tstmp = '{},{},{},{},{}'.format(*tstamp.split('.')[0: 5])
+
+                except TypeError:
+                    tstmp = '{},{},{},{},{}'.format(*tstamp.decode("utf-8").split('.')[0: 5])
+                timestamps[i - ix_corr_min] = UTCDateTime(tstmp).timestamp
+            elif type(tstamp) in [np.float32, np.float64, float]:
+                timestamps[i - ix_corr_min] = tstamp
+            else:
+                raise TypeError("Unknown type for timestamps: ", type(tstamp))
                 
 
         data = data[timestamps != 0.0]
@@ -678,7 +684,7 @@ class CCDataset_serial(object):
             if not mask_gaps:
                 t_to_plot = np.arange(dat_mat.shape[0])
             ax1.pcolormesh(lag, t_to_plot, dat_mat, vmax=vmax, vmin=vmin,
-                           cmap=cmap)
+                           cmap=cmap, shading="gouraud")
 
         if mark_17_quake:
             ylabels.append(UTCDateTime("2017,262").timestamp)
