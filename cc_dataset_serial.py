@@ -444,7 +444,7 @@ class CCDataset_serial(object):
             tstamp = self.datafile["corr_windows"]["timestamps"][i]
             data[i - ix_corr_min, :] = v
 
-
+            tstamp = tstamp.decode()
             if type(tstamp) == str:
                 if tstamp == "":
                     continue
